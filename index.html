@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MARSNAV — Interplanetary Survival Guide & Martian Map. NASA Space Apps Challenge 2026. Interactive Mars surface navigation, multi-mission datasets, hazard avoidance, and Marswalk route planner.">
+    <meta name="theme-color" content="#07071a">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Social Sharing -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="MARSNAV — Interplanetary Survival Guide: Martian Map">
+    <meta property="og:description" content="Operational Mars navigation, multi-mission NASA datasets (MOLA, HiRISE, CRISM, THEMIS), hazard avoidance, and Marswalk EVA route planner. Built for NASA Space Apps Challenge 2026.">
+    <meta property="og:site_name" content="MARSNAV">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MARSNAV — Interplanetary Survival Guide: Martian Map">
+    <meta name="twitter:description" content="Plan human surface expeditions on Mars using authentic NASA and USGS planetary datasets.">
+
+    <!-- Crisp Mars SVG Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23ff6b35'/%3E%3Ccircle cx='11' cy='12' r='3.5' fill='%23d85020' opacity='0.7'/%3E%3Ccircle cx='21' cy='18' r='4.5' fill='%23c04015' opacity='0.6'/%3E%3Ccircle cx='13' cy='22' r='2' fill='%23a8300c' opacity='0.7'/%3E%3Cellipse cx='16' cy='3' rx='7' ry='2' fill='%23ffffff' opacity='0.85'/%3E%3C/svg%3E">
+
+    <title>MARSNAV — Interplanetary Survival Guide: Martian Map | NASA Space Apps 2026</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <!-- Core Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ==================== LOADING SCREEN ==================== -->
+    <div id="loading-screen">
+        <div class="loader-wrap">
+            <div class="mars-loader-planet"></div>
+            <div class="loader-label">INITIALIZING MARSNAV TELEMETRY</div>
+            <div class="loader-track">
+                <div class="loader-fill"></div>
+            </div>
+            <div class="loader-sub">Fetching NASA Multi-Mission Planetary Datasets...</div>
+        </div>
+    </div>
+
+    <!-- ==================== TOP NAVIGATION ==================== -->
+    <header id="navbar">
+        <div class="nav-container">
+            <a href="#dashboard" class="nav-brand">
+                <i class="fa-solid fa-satellite-dish" style="color: var(--mars-primary); font-size: 22px;"></i>
+                <span class="brand-name">MARS<span class="brand-nav">NAV</span></span>
+            </a>
+
+            <!-- 9 Primary Application Sections -->
+            <nav class="nav-links">
+                <a href="#dashboard" class="nav-link active" data-section="dashboard">Dashboard</a>
+                <a href="#map-section" class="nav-link" data-section="map-section">Martian Map</a>
+                <a href="#terrain" class="nav-link" data-section="terrain">Terrain</a>
+                <a href="#geology" class="nav-link" data-section="geology">Geology</a>
+                <a href="#environment" class="nav-link" data-section="environment">Environment</a>
+                <a href="#resources" class="nav-link" data-section="resources">Resources</a>
+                <a href="#route-planner" class="nav-link" data-section="route-planner">Route Planner</a>
+                <a href="#reports" class="nav-link" data-section="reports">Mission Reports</a>
+                <a href="#sources" class="nav-link" data-section="sources">Data Sources</a>
+            </nav>
+
+            <div class="nav-right">
+                <div class="live-badge" title="Martian Sol Telemetry Active">
+                    <span class="live-dot"></span>
+                    <span class="live-text" id="telemetry-sol-badge">SOL 1420 &bull; LIVE</span>
+                </div>
+                <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle Navigation Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Drawer Navigation -->
+        <div class="mobile-nav" id="mobile-nav">
+            <a href="#dashboard" class="mobile-link" data-section="dashboard">Mission Dashboard</a>
+            <a href="#map-section" class="mobile-link" data-section="map-section">Martian Map</a>
+            <a href="#terrain" class="mobile-link" data-section="terrain">Terrain Analysis</a>
+            <a href="#geology" class="mobile-link" data-section="geology">Geology Explorer</a>
+            <a href="#environment" class="mobile-link" data-section="environment">Environmental Monitor</a>
+            <a href="#resources" class="mobile-link" data-section="resources">Resource Explorer</a>
+            <a href="#route-planner" class="mobile-link" data-section="route-planner">Route Planner</a>
+            <a href="#reports" class="mobile-link" data-section="reports">Mission Reports</a>
+            <a href="#sources" class="mobile-link" data-section="sources">Data Sources Registry</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- ==================== 1. MISSION DASHBOARD (HERO) ==================== -->
+        <section id="dashboard" class="hero-section">
+            <div id="hero">
+                <canvas id="stars-canvas"></canvas>
+                <div class="hero-glow"></div>
+
+                <div class="hero-content">
+                    <div class="mission-pill animate-in delay-0">
+                        <i class="fa-solid fa-shuttle-space"></i> NASA SPACE APPS CHALLENGE 2026
+                    </div>
+                    <h1 class="hero-title animate-in delay-1">
+                        <span class="title-top">INTERPLANETARY</span>
+                        <span class="title-bottom">SURVIVAL GUIDE</span>
+                    </h1>
+                    <p class="hero-tagline animate-in delay-2">
+                        OPERATIONAL <span class="tagline-accent">MARTIAN MAP</span> &amp; MARSWALK NAVIGATION SYSTEM
+                    </p>
+                    <p class="hero-desc animate-in delay-3">
+                        Integrated multi-mission NASA spatial intelligence system for human surface exploration. Synthesizing USGS astrogeology, MGS MOLA elevation models, CRISM mineralogy, and MEDA/REMS environmental telemetry to plan safe surface EVAs and accelerate scientific discovery.
+                    </p>
+
+                    <div class="hero-ctas animate-in delay-4">
+                        <a href="#map-section" class="cta-primary">
+                            <i class="fa-solid fa-map-location-dot"></i> LAUNCH MARTIAN MAP
+                        </a>
+                        <a href="#route-planner" class="cta-secondary">
+                            <i class="fa-solid fa-route"></i> PLAN MARSWALK EVA
+                        </a>
+                    </div>
+
+                    <div class="hero-stats animate-in delay-5">
+                        <div class="hstat">
+                            <span class="hstat-num" id="stat-sites">18</span>
+                            <span class="hstat-lbl">Exploration Sites</span>
+                        </div>
+                        <div class="hstat-divider"></div>
+                        <div class="hstat-num-wrap hstat">
+                            <span class="hstat-num">-63&deg;C</span>
+                            <span class="hstat-lbl">Mean Surface Temp</span>
+                        </div>
+                        <div class="hstat-divider"></div>
+                        <div class="hstat">
+                            <span class="hstat-num">0.6 kPa</span>
+                            <span class="hstat-lbl">Atm Pressure</span>
+                        </div>
+                        <div class="hstat-divider"></div>
+                        <div class="hstat">
+                            <span class="hstat-num">3,389.5</span>
+                            <span class="hstat-lbl">Mean Radius (km)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3D Mars CSS Sphere -->
+                <div class="planet-wrap">
+                    <div class="mars-sphere">
+                        <div class="mars-texture"></div>
+                        <div class="mars-storm-cloud"></div>
+                        <div class="mars-polar"></div>
+                        <div class="mars-sheen"></div>
+                    </div>
+                    <div class="orbit-ring ring-1"></div>
+                    <div class="orbit-ring ring-2"></div>
+                </div>
+
+                <div class="scroll-hint">
+                    <span>EXPLORE SURFACE DATA</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+            </div>
+
+            <!-- Live Connected Mission Telemetry Dashboard -->
+            <div class="live-mission-dashboard">
+                <div class="lmd-panel">
+                    <div class="lmd-header">
+                        <div class="lmd-title-wrap">
+                            <i class="fa-solid fa-gauge-high" style="color: var(--mars-primary); font-size: 20px;"></i>
+                            <h2 class="lmd-title">MISSION DASHBOARD &bull; OPERATIONAL SURFACE TELEMETRY</h2>
+                        </div>
+                        <div class="lmd-status-pill" id="lmd-status-pill">
+                            <i class="fa-solid fa-satellite-dish"></i>
+                            <span id="lmd-status-text">STATUS: SYNCHRONIZED &bull; SOL 1420</span>
+                        </div>
+                    </div>
+
+                    <!-- 4 Live Connected Metrics -->
+                    <div class="lmd-telemetry-grid">
+                        <div class="lmd-metric-card">
+                            <span class="lmd-mc-lbl"><i class="fa-solid fa-map-pin"></i> PLANNED TRAVERSE POINTS</span>
+                            <span class="lmd-mc-val" id="dash-route-endpoints">Jezero Landing &rarr; Neretva Fan</span>
+                            <span class="lmd-mc-sub" id="dash-wp-count">5 Waypoints in sequence</span>
+                        </div>
+                        <div class="lmd-metric-card">
+                            <span class="lmd-mc-lbl"><i class="fa-solid fa-route"></i> TOTAL DISTANCE &amp; TIME</span>
+                            <span class="lmd-mc-val" id="dash-total-distance">6.32 km</span>
+                            <span class="lmd-mc-sub" id="dash-est-time">Est. Traverse: 0.4 hrs (Rover)</span>
+                        </div>
+                        <div class="lmd-metric-card">
+                            <span class="lmd-mc-lbl"><i class="fa-solid fa-shield-virus"></i> LIFE SUPPORT &amp; O&sup2;</span>
+                            <span class="lmd-mc-val" id="dash-o2-consumption">0.03 kg O&sup2;</span>
+                            <span class="lmd-mc-sub" id="dash-suit-margin">Life Support Reserve: 98%</span>
+                        </div>
+                        <div class="lmd-metric-card">
+                            <span class="lmd-mc-lbl"><i class="fa-solid fa-cloud-sun"></i> SURFACE METEOROLOGY</span>
+                            <span class="lmd-mc-val">-63&deg;C &bull; 610 Pa</span>
+                            <span class="lmd-mc-sub">Dust Tau: &tau; 0.45 (Clear Skies)</span>
+                        </div>
+                    </div>
+
+                    <!-- Route Risk Assessment Bar & Breakdown -->
+                    <div class="lmd-risk-row">
+                        <div class="risk-score-box">
+                            <span class="risk-badge-large low" id="dash-risk-badge">LOW RISK TRAVERSE</span>
+                            <div class="risk-score-bar-track">
+                                <div class="risk-score-bar-fill" id="dash-risk-bar" style="width: 18%; background: var(--green);"></div>
+                            </div>
+                            <span style="font-size: 11px; color: var(--text-3); text-align: center;">
+                                Composite Risk Index: <strong id="dash-risk-score" style="color: var(--text-1);">18 / 100</strong>
+                            </span>
+                        </div>
+
+                        <!-- 4 Transparent Scoring Factors -->
+                        <div class="risk-factors-list">
+                            <div class="risk-factor-item">
+                                <span class="rf-label">1. Slope &amp; Incline Grade:</span>
+                                <span class="rf-val" id="rf-slope-val" style="color: var(--green);">3.2&deg; (Gentle: +4)</span>
+                            </div>
+                            <div class="risk-factor-item">
+                                <span class="rf-label">2. Known Hazard Intersections:</span>
+                                <span class="rf-val" id="rf-hazards-val" style="color: var(--green);">0 Critical (+0)</span>
+                            </div>
+                            <div class="risk-factor-item">
+                                <span class="rf-label">3. Distance &amp; Life Support:</span>
+                                <span class="rf-val" id="rf-dist-val" style="color: var(--green);">Nominal Range (+4)</span>
+                            </div>
+                            <div class="risk-factor-item">
+                                <span class="rf-label">4. Data Uncertainty Buffer:</span>
+                                <span class="rf-val" id="rf-uncertainty-val" style="color: var(--yellow);">HiRISE Verified (+10)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Warnings & Detected Hazards -->
+                    <div class="lmd-warnings-box" id="dash-warning-box">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <div>
+                            <strong>Active Traverse Intelligence:</strong>
+                            <div class="lmd-warnings-text" id="dash-warning-text">
+                                No critical terrain obstacles detected along current waypoint coordinates. Ground reconnaissance advised prior to descending delta breakline.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 2. INTERACTIVE MARTIAN MAP ==================== -->
+        <section id="map-section">
+            <div class="section-header">
+                <div class="section-label">MULTI-MISSION GEOSPATIAL VIEWER</div>
+                <h2>Interactive Martian Surface Map</h2>
+                <p>Authentic Mars basemap with USGS/NASA Viking &amp; MOLA datasets. Toggle planetary science layers, survey landing sites, inspect hazardous slopes, and plan traverse routes.</p>
+            </div>
+
+            <!-- Quick Jump Location Bar -->
+            <div class="map-controls-bar">
+                <div class="quick-jump-wrap">
+                    <span class="bar-label"><i class="fa-solid fa-location-crosshairs"></i> QUICK JUMP:</span>
+                    <button class="qjump-btn active" data-lat="18.38" data-lon="77.58" data-zoom="6">Jezero Crater (Perseverance)</button>
+                    <button class="qjump-btn" data-lat="-4.59" data-lon="137.44" data-zoom="6">Gale Crater (Curiosity)</button>
+                    <button class="qjump-btn" data-lat="18.65" data-lon="-133.8" data-zoom="5">Olympus Mons</button>
+                    <button class="qjump-btn" data-lat="-13.9" data-lon="-59.2" data-zoom="5">Valles Marineris</button>
+                    <button class="qjump-btn" data-lat="46.7" data-lon="117.5" data-zoom="5">Utopia Planitia (Zhurong)</button>
+                    <button class="qjump-btn" data-lat="-1.94" data-lon="-5.52" data-zoom="6">Meridiani Planum (Opportunity)</button>
+                </div>
+                <div class="map-view-resets">
+                    <button class="btn-reset-view" id="btn-reset-map" title="Reset to Global Mars View">
+                        <i class="fa-solid fa-globe"></i> Global View
+                    </button>
+                </div>
+            </div>
+
+            <!-- Map Frame with Sidebar, Map, and Info Panel -->
+            <div class="map-frame">
+                <!-- Left Control & Filter Panel -->
+                <aside class="layer-panel" id="layer-panel">
+                    <div class="lp-header">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>DATA LAYERS</span>
+                    </div>
+
+                    <div class="layer-status-pill" id="layer-status-indicator">
+                        <i class="fa-solid fa-satellite"></i>
+                        <span id="layer-status-text">USGS / NASA WMS ONLINE</span>
+                    </div>
+
+                    <!-- Basemap Selector -->
+                    <div class="lp-group">
+                        <div class="lp-grouptitle">BASE SURFACE IMAGERY</div>
+                        <!-- OpenPlanetary Viking Mosaic -->
+                        <div class="lp-row">
+                            <div class="lp-info">
+                                <span class="lp-dot" style="--dc: #ff6b35;"></span>
+                                <div class="lp-txt">
+                                    <span class="lp-name">Mars Viking Mosaic</span>
+                                    <span class="lp-src">OpenPlanetary / USGS MDIM 2.1</span>
+                                </div>
+                            </div>
+                            <label class="toggle">
+                                <input type="radio" name="basemap-select" value="viking" checked id="base-viking">
+                                <span class="tog-track"></span>
+                            </label>
+                        </div>
+                        <!-- USGS Astrogeology MOLA Color Elevation WMS -->
+                        <div class="lp-row">
+                            <div class="lp-info">
+                                <span class="lp-dot" style="--dc: #3498db;"></span>
+                                <div class="lp-txt">
+                                    <span class="lp-name">USGS MOLA Color Elevation</span>
+                                    <span class="lp-src">USGS Astrogeology WMS (Live)</span>
+                                </div>
+                            </div>
+                            <label class="toggle">
+                                <input type="radio" name="basemap-select" value="usgs-mola" id="base-usgs-mola">
+                                <span class="tog-track"></span>
+                            </label>
+                        </div>
+                        <!-- USGS Astrogeology MOLA/THEMIS Blend WMS -->
+                        <div class="lp-row">
+                            <div class="lp-info">
+                                <span class="lp-dot" style="--dc: #e67e22;"></span>
+                                <div class="lp-txt">
+                                    <span class="lp-name">USGS MOLA / THEMIS Blend</span>
+                                    <span class="lp-src">USGS Astrogeology WMS (Live)</span>
+                                </div>
+                            </div>
+                            <label class="toggle">
+                                <input type="radio" name="basemap-select" value="usgs-blend" id="base-usgs-blend">
+                                <span class="tog-track"></span>
+                            </label>
+                        </div>
+                        <!-- USGS THEMIS Nighttime Infrared WMS -->
+                        <div class="lp-row">
+                            <div class="lp-info">
+                                <span class="lp-dot" style="--dc: #9b59b6;"></span>
+                                <div class="lp-txt">
+                                    <span class="lp-name">USGS THEMIS Night Thermal</span>
+                                    <span class="lp-src">2001 Mars Odyssey IR WMS</span>
+                                </div>
+                            </div>
+                            <label class="toggle">
+                                <input type="radio" name="basemap-select" value="themis-night" id="base-themis-night">
+                                <span class="tog-track"></span>
+                            </label>
+                        </div>
+                        <!-- NASA Trek MOLA Shaded Relief -->
+                        <div class="lp-row">
+                            <div class="lp-info">
+                                <span class="lp-dot" style="--dc: #1abc9c;"></span>
+                                <div class="lp-txt">
+                                    <span class="lp-name">NASA Trek MOLA Shaded</span>
+                                    <span class="lp-src">JPL Planetary Tile Service</span>
+                                </div>
+                            </div>
+                            <label class="toggle">
+                                <input type="radio" name="basemap-select" value="mola" id="base-mola">
+                                <span class="tog-track"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Data Overlays -->
+                    <div class="lp-group">
+                        <div class="lp-grouptitle">SCIENTIFIC OVERLAYS</div>
+                        
+                        <!-- Landing Sites -->
+                        <div class="lp-row">
+                            <div class="lp-info">
+                                <span class="lp-dot" style="--dc: #2ecc71;"></span>
+                                <div class="lp-txt">
+                                    <span class="lp-name">NASA/ESA Landing Sites</span>
+                                    <span class="lp-src">Active &amp; Historical Surface Rovers</span>
+                                </div>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="layer-landings" checked>
+                                <span class="tog-track"></span>
+                            </label>
+                        </div>
+
+                        <!-- USGS Planetary Nomenclature -->
+                        <div class="lp-row">
+                            <div class="lp-info">
+                                <span class="lp-dot" style="--dc: #3498db;"></span>
+                                <div class="lp-txt">
+                                    <span class="lp-name">USGS IAU Nomenclature</span>
+                                    <span class="lp-src">Official Craters, Montes &amp; Chasmata</span>
+                                </div>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="layer-nomenclature" checked>
+                                <span class="tog-track"></span>
+                            </label>
+                        </div>
+
+                        <!-- MRO HiRISE Observation Footprints -->
+                        <div class="lp-row">
+                            <div class="lp-info">
+                                <span class="lp-dot" style="--dc: #ff8c54;"></span>
+                                <div class="lp-txt">
+                                    <span class="lp-name">MRO HiRISE Footprints</span>
+                                    <span class="lp-src">Sub-meter High Resolution (PDS)</span>
+                                </div>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="layer-hirise" checked>
+                                <span class="tog-track"></span>
+                            </label>
+                        </div>
+
+                        <!-- Topography & Hazards -->
+                        <div class="lp-row">
+                            <div class="lp-info">
+                                <span class="lp-dot" style="--dc: #e74c3c;"></span>
+                                <div class="lp-txt">
+                                    <span class="lp-name">Steep Slopes &amp; Hazards</span>
+                                    <span class="lp-src">MOLA/HiRISE Traverse Risks</span>
+                                </div>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="layer-hazards" checked>
+                                <span class="tog-track"></span>
+                            </label>
+                        </div>
+
+                        <!-- Surface Geology (CRISM) -->
+                        <div class="lp-row">
+                            <div class="lp-info">
+                                <span class="lp-dot" style="--dc: #f39c12;"></span>
+                                <div class="lp-txt">
+                                    <span class="lp-name">CRISM Mineral Signatures</span>
+                                    <span class="lp-src">Clays, Carbonates &amp; Sulfates (PDS)</span>
+                                </div>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="layer-geology" checked>
+                                <span class="tog-track"></span>
+                            </label>
+                        </div>
+
+                        <!-- In-Situ Resources / Ice (SWIM) -->
+                        <div class="lp-row">
+                            <div class="lp-info">
+                                <span class="lp-dot" style="--dc: #1abc9c;"></span>
+                                <div class="lp-txt">
+                                    <span class="lp-name">Subsurface Water Ice</span>
+                                    <span class="lp-src">NASA SWIM / SHARAD Radar</span>
+                                </div>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="layer-resources" checked>
+                                <span class="tog-track"></span>
+                            </label>
+                        </div>
+
+                        <!-- Lava Tubes / Shelter -->
+                        <div class="lp-row">
+                            <div class="lp-info">
+                                <span class="lp-dot" style="--dc: #9b59b6;"></span>
+                                <div class="lp-txt">
+                                    <span class="lp-name">Lava Tubes / Shelters</span>
+                                    <span class="lp-src">THEMIS Cave Candidate Catalog</span>
+                                </div>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="layer-shelters" checked>
+                                <span class="tog-track"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Route Planner Mini-Controls in Layer Panel -->
+                    <div class="lp-group">
+                        <div class="lp-grouptitle">MARSWALK ROUTE PLANNER</div>
+                        <p class="lp-hint">Click "Plan Marswalk" and click anywhere on the Martian map to plot EVA waypoints and compute surface distance.</p>
+                        <button class="btn-route" id="btn-toggle-route-mode">
+                            <i class="fa-solid fa-pen-nib"></i> Plan Marswalk Mode
+                        </button>
+                        <button class="btn-clear" id="btn-clear-route-map">
+                            <i class="fa-solid fa-trash-can"></i> Clear Route
+                        </button>
+                        <div class="route-stats" id="quick-route-stats">
+                            <div class="rs-row">
+                                <span class="rs-lbl">Waypoints:</span>
+                                <span class="rs-val" id="map-route-wps">0</span>
+                            </div>
+                            <div class="rs-row">
+                                <span class="rs-lbl">Distance:</span>
+                                <span class="rs-val" id="map-route-dist">0.00 km</span>
+                            </div>
+                            <div class="rs-row">
+                                <span class="rs-lbl">Est EVA Walk:</span>
+                                <span class="rs-val" id="map-route-time">0.0 hrs</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dataset Attribution Badges -->
+                    <div class="lp-group">
+                        <div class="lp-grouptitle">DATASETS INTEGRATED</div>
+                        <div class="src-badges">
+                            <span class="src-badge"><i class="fa-solid fa-database"></i> Mars Trek API</span>
+                            <span class="src-badge"><i class="fa-solid fa-satellite"></i> MGS MOLA</span>
+                            <span class="src-badge"><i class="fa-solid fa-camera"></i> MRO HiRISE</span>
+                            <span class="src-badge"><i class="fa-solid fa-flask"></i> CRISM</span>
+                            <span class="src-badge"><i class="fa-solid fa-microchip"></i> REMS / MEDA</span>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Center Leaflet Map Container -->
+                <div id="mars-map">
+                    <!-- Notification Toast for Network & Layer Fallbacks -->
+                    <div class="map-toast" id="map-toast">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span id="map-toast-msg">USGS WMS Live Layer Active</span>
+                    </div>
+
+                    <!-- Real-time Mars Coordinate & Elevation HUD -->
+                    <div class="map-hud-overlay" id="map-hud">
+                        <div class="hud-item"><span class="hud-tag">LAT/LON:</span> <span id="hud-coords">18.38&deg; N, 77.58&deg; E</span></div>
+                        <div class="hud-item"><span class="hud-tag">REGION:</span> <span id="hud-region">Jezero Crater, Syrtis Major</span></div>
+                        <div class="hud-item"><span class="hud-tag">ELEVATION:</span> <span id="hud-elevation">-2,540 m (MOLA Datum)</span></div>
+                    </div>
+                </div>
+
+                <!-- Mobile Toggle Button for Layer Panel -->
+                <button class="panel-toggle-btn" id="panel-toggle-btn" aria-label="Toggle Map Layers Panel">
+                    <i class="fa-solid fa-sliders"></i>
+                </button>
+
+                <!-- Right Side Inspection & Telemetry Panel -->
+                <aside class="info-panel" id="info-panel">
+                    <button class="info-close" id="info-close" aria-label="Close Information Panel">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
+                    <!-- Initial State when no location is clicked -->
+                    <div class="info-empty" id="info-empty-state">
+                        <i class="fa-solid fa-satellite info-empty-icon"></i>
+                        <h4>NO SECTOR SELECTED</h4>
+                        <p>Click any exploration target, rover site, or hazard marker on the Martian map to retrieve NASA mission telemetry.</p>
+                    </div>
+
+                    <!-- Populated Details State -->
+                    <div class="info-details" id="info-details-state" style="display: none;">
+                        <div class="inf-header" id="inf-card-header">
+                            <span class="inf-emoji" id="inf-icon">📍</span>
+                            <div>
+                                <h3 class="inf-name" id="inf-title">Jezero Crater</h3>
+                                <span class="inf-type" id="inf-category" style="color: var(--mars-primary);">HISTORICAL LANDING SITE</span>
+                            </div>
+                        </div>
+
+                        <p class="inf-desc" id="inf-description">Ancient lake delta containing smectite clay minerals and carbonate rocks capable of preserving biosignatures from Mars' wet Noachian era.</p>
+
+                        <!-- Telemetry Stats Table -->
+                        <div class="inf-stats">
+                            <div class="inf-row">
+                                <span>Coordinates:</span>
+                                <span id="inf-coords">18.38&deg; N, 77.58&deg; E</span>
+                            </div>
+                            <div class="inf-row">
+                                <span>Elevation (MOLA):</span>
+                                <span id="inf-elevation">-2,540 meters</span>
+                            </div>
+                            <div class="inf-row">
+                                <span>Traverse Slope:</span>
+                                <span id="inf-slope">3.2&deg; (Gentle)</span>
+                            </div>
+                            <div class="inf-row">
+                                <span>Radiation Shielding:</span>
+                                <span id="inf-radiation">Minimal (Surface)</span>
+                            </div>
+                            <div class="inf-row">
+                                <span>Primary Mineral:</span>
+                                <span id="inf-mineral">Smectite Clay &amp; Olivine</span>
+                            </div>
+                        </div>
+
+                        <!-- Hazard Rating Indicator -->
+                        <div class="inf-rating">
+                            <span class="inf-rating-label">EVA HAZARD ASSESSMENT</span>
+                            <div class="inf-rating-stars" id="inf-hazard-badge">
+                                <span class="threat moderate">MODERATE RISK</span>
+                            </div>
+                        </div>
+
+                        <!-- Scientific & Operational Recommendations -->
+                        <div class="inf-sec">
+                            <h4>OPERATIONAL PROTOCOL</h4>
+                            <ul class="inf-list" id="inf-protocols">
+                                <li>Conduct autonomous rover scout before astronaut EVA.</li>
+                                <li>Monitor dust accumulation on solar arrays and EVA visor.</li>
+                                <li>Maintain UHF line-of-sight with Mars Reconnaissance Orbiter pass.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Data Provenance Citation -->
+                        <div class="inf-source">
+                            <i class="fa-solid fa-database"></i>
+                            <span id="inf-source-text">Data: NASA Mars 2020 / USGS Astrogeology</span>
+                        </div>
+
+                        <button class="btn-route" id="btn-add-poi-waypoint" style="margin-top: 10px;">
+                            <i class="fa-solid fa-location-dot"></i> Add to Marswalk Route
+                        </button>
+                    </div>
+                </aside>
+            </div>
+
+            <!-- Map Legend -->
+            <div class="map-legend">
+                <div class="legend-item"><span class="ldot" style="background: #2ecc71;"></span> Rover Landing Sites</div>
+                <div class="legend-item"><span class="ldot" style="background: #3498db;"></span> USGS Planetary Nomenclature</div>
+                <div class="legend-item"><span class="ldot" style="background: #ff8c54;"></span> MRO HiRISE Footprints (Sub-meter)</div>
+                <div class="legend-item"><span class="ldot" style="background: #e74c3c;"></span> Steep Slope / Crater Wall Hazard</div>
+                <div class="legend-item"><span class="ldot" style="background: #f39c12;"></span> Mineral / CRISM Science Targets</div>
+                <div class="legend-item"><span class="ldot" style="background: #1abc9c;"></span> Subsurface Water Ice (SWIM)</div>
+                <div class="legend-item"><span class="ldot" style="background: #9b59b6;"></span> Lava Tube Skylights (Shelter)</div>
+                <div class="legend-item"><span class="ldot" style="background: #ff6b35;"></span> Planned Marswalk Waypoint</div>
+                <div class="wms-legend-row">
+                    <span><i class="fa-solid fa-server" style="color: var(--green);"></i> USGS WMS Status: <strong>LIVE CONNECTED</strong></span>
+                    <span>&bull;</span>
+                    <span><i class="fa-solid fa-shield-halved" style="color: var(--mars-primary);"></i> Projection: <strong>Equirectangular &amp; Web Mercator (Mars R=3389.5 km)</strong></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 3. TERRAIN ANALYSIS ==================== -->
+        <section id="terrain" class="app-section">
+            <div class="section-header">
+                <div class="section-label">TOPOGRAPHY &amp; HAZARD GEODESY</div>
+                <h2>Terrain Analysis &amp; Slope Geodesy</h2>
+                <p>Derived from the Mars Orbiter Laser Altimeter (MOLA) and High Resolution Imaging Science Experiment (HiRISE). Elevation gradients dictate EVA rover energy expenditure, traction limits, and descent safety.</p>
+            </div>
+
+            <div class="terrain-grid">
+                <!-- Elevation Zone Classification -->
+                <div class="s-card">
+                    <div class="s-stripe stripe-orange"></div>
+                    <div class="s-card-header">
+                        <div class="s-icon s-icon-orange"><i class="fa-solid fa-mountain"></i></div>
+                        <div>
+                            <h3>MOLA Hypsometric Elevation Zones</h3>
+                            <span class="threat moderate">TOPOGRAPHIC PROFILE</span>
+                        </div>
+                    </div>
+                    <p class="s-desc">Mars possesses a dramatic global topographic dichotomy: smooth northern lowlands (-5 to -3 km) vs rugged southern highlands (+1 to +5 km), punctuated by the Tharsis volcanic bulge (+21 km).</p>
+                    <div class="terrain-elevation-bars">
+                        <div class="elev-item">
+                            <span class="elev-label">Olympus Mons Peak</span>
+                            <div class="elev-bar-track"><div class="elev-bar-fill" style="width: 100%; background: #e74c3c;"></div></div>
+                            <span class="elev-value">+21,287 m</span>
+                        </div>
+                        <div class="elev-item">
+                            <span class="elev-label">Southern Highlands Mean</span>
+                            <div class="elev-bar-track"><div class="elev-bar-fill" style="width: 58%; background: #e67e22;"></div></div>
+                            <span class="elev-value">+3,500 m</span>
+                        </div>
+                        <div class="elev-item">
+                            <span class="elev-label">MOLA Datum Reference (0 km)</span>
+                            <div class="elev-bar-track"><div class="elev-bar-fill" style="width: 45%; background: #f39c12;"></div></div>
+                            <span class="elev-value">0 m (610 Pa)</span>
+                        </div>
+                        <div class="elev-item">
+                            <span class="elev-label">Northern Lowlands Floor</span>
+                            <div class="elev-bar-track"><div class="elev-bar-fill" style="width: 25%; background: #3498db;"></div></div>
+                            <span class="elev-value">-4,200 m</span>
+                        </div>
+                        <div class="elev-item">
+                            <span class="elev-label">Hellas Impact Basin Floor</span>
+                            <div class="elev-bar-track"><div class="elev-bar-fill" style="width: 8%; background: #2980b9;"></div></div>
+                            <span class="elev-value">-7,152 m</span>
+                        </div>
+                    </div>
+                    <div class="s-src"><i class="fa-solid fa-database"></i> Source: NASA Planetary Data System MGS-M-MOLA-5-MEGDR-L3-V1</div>
+                </div>
+
+                <!-- Slope Stability Classification -->
+                <div class="s-card">
+                    <div class="s-stripe stripe-red"></div>
+                    <div class="s-card-header">
+                        <div class="s-icon s-icon-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div>
+                            <h3>Traverse Slope Hazard Index</h3>
+                            <span class="threat critical">SAFETY THRESHOLDS</span>
+                        </div>
+                    </div>
+                    <p class="s-desc">Loose basaltic regolith drastically reduces tire traction and boot stability on inclined gradients. Exceeding slope limits risks catastrophic rover rollover or suit puncture.</p>
+                    <div class="hazard-tiers">
+                        <div class="tier-item safe">
+                            <div class="tier-hdr"><span class="badge-dot green"></span> <strong>0&deg; &ndash; 12&deg; : Safe Traverse</strong></div>
+                            <p>Unrestricted astronaut EVA and pressurized rover transit. Standard power consumption.</p>
+                        </div>
+                        <div class="tier-item caution">
+                            <div class="tier-hdr"><span class="badge-dot yellow"></span> <strong>12&deg; &ndash; 20&deg; : Cautionary Zone</strong></div>
+                            <p>Reduced speed (0.5 km/h). 220% increase in mechanical slip. Requires traction telemetry monitoring.</p>
+                        </div>
+                        <div class="tier-item danger">
+                            <div class="tier-hdr"><span class="badge-dot red"></span> <strong>&gt; 20&deg; : Critical Incline / No-Go</strong></div>
+                            <p>Exceeds regolith angle of repose (30&ndash;35&deg;). High risk of unrecoverable scree avalanche.</p>
+                        </div>
+                    </div>
+                    <div class="s-src"><i class="fa-solid fa-database"></i> Source: HiRISE Digital Terrain Models (DTM) / NASA JPL Rover Operations</div>
+                </div>
+
+                <!-- Terrain Geomorphology -->
+                <div class="s-card">
+                    <div class="s-stripe stripe-blue"></div>
+                    <div class="s-card-header">
+                        <div class="s-icon s-icon-blue"><i class="fa-solid fa-gem"></i></div>
+                        <div>
+                            <h3>Surface Roughness &amp; Boulder Density</h3>
+                            <span class="threat moderate">OBSTACLE METRICS</span>
+                        </div>
+                    </div>
+                    <p class="s-desc">Thermal Emission Imaging System (THEMIS) thermal inertia measurements identify blocky ejecta blankets vs fine-grained dust mantles.</p>
+                    <div class="roughness-table">
+                        <div class="inf-row"><span>Fine Dust Sheets (&lt;10 &mu;m):</span> <span style="color: #f39c12;">High Sinkage Risk</span></div>
+                        <div class="inf-row"><span>Basaltic Sand Ripples:</span> <span style="color: #e67e22;">Firm Substrate (Good Traction)</span></div>
+                        <div class="inf-row"><span>Crater Rim Ejecta:</span> <span style="color: #e74c3c;">High Boulder Density (&gt;0.5m)</span></div>
+                        <div class="inf-row"><span>Yardangs &amp; Escarpments:</span> <span style="color: #e74c3c;">Severe Chassis Obstacle</span></div>
+                    </div>
+                    <div class="s-src"><i class="fa-solid fa-database"></i> Source: Mars Global Surveyor TES &amp; 2001 Mars Odyssey THEMIS</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 4. GEOLOGY EXPLORER ==================== -->
+        <section id="geology" class="app-section">
+            <div class="section-header">
+                <div class="section-label">SPECTRAL ASTROGEOLOGY &amp; SAMPLES</div>
+                <h2>Geology Explorer &amp; Mineral Signatures</h2>
+                <p>CRISM imaging spectrometer maps phyllosilicates, hydrated sulfates, and volcanic basalt formations. Identifying ancient aqueous geochemical environments unlocks the history of Martian habitability.</p>
+            </div>
+
+            <div class="geology-container">
+                <div class="geology-grid">
+                    <!-- Mineral Card 1: Phyllosilicates -->
+                    <div class="s-card">
+                        <div class="s-stripe stripe-teal"></div>
+                        <div class="s-card-header">
+                            <div class="s-icon s-icon-teal"><i class="fa-solid fa-vial"></i></div>
+                            <div>
+                                <h3>Phyllosilicates (Smectite Clays)</h3>
+                                <span class="threat opportunity">HIGH SCIENCE TARGET</span>
+                            </div>
+                        </div>
+                        <p class="s-desc">Formed in neutral to alkaline, non-acidic standing liquid water during the early Noachian epoch (>3.7 billion years ago). Prime matrices for biosignature preservation.</p>
+                        <div class="inf-stats">
+                            <div class="inf-row"><span>Key Locations:</span> <span>Jezero Crater, Mawrth Vallis, Nili Fossae</span></div>
+                            <div class="inf-row"><span>Spectrometer Band:</span> <span>1.4 &mu;m, 1.9 &mu;m, 2.2 &mu;m (CRISM)</span></div>
+                            <div class="inf-row"><span>Sampling Value:</span> <span>Category 1 Astrobiology Objective</span></div>
+                        </div>
+                        <div class="s-src"><i class="fa-solid fa-satellite"></i> CRISM Spectral Library / MRO</div>
+                    </div>
+
+                    <!-- Mineral Card 2: Hydrated Sulfates -->
+                    <div class="s-card">
+                        <div class="s-stripe stripe-orange"></div>
+                        <div class="s-card-header">
+                            <div class="s-icon s-icon-orange"><i class="fa-solid fa-cubes"></i></div>
+                            <div>
+                                <h3>Hydrated Sulfates (Gypsum &amp; Kieserite)</h3>
+                                <span class="threat moderate">RESOURCE PRECURSOR</span>
+                            </div>
+                        </div>
+                        <p class="s-desc">Precipitated during the acidic Hesperian epoch drying phase. Contains bound crystal water that can be dehydrated via thermal processing to produce drinkable $H_2O$.</p>
+                        <div class="inf-stats">
+                            <div class="inf-row"><span>Key Locations:</span> <span>Mount Sharp (Gale), Valles Marineris</span></div>
+                            <div class="inf-row"><span>Bound Water %:</span> <span>10% &ndash; 20% by molecular weight</span></div>
+                            <div class="inf-row"><span>Thermal Yield:</span> <span>Release at 150&deg;C &ndash; 300&deg;C</span></div>
+                        </div>
+                        <div class="s-src"><i class="fa-solid fa-satellite"></i> Mars Express OMEGA / Curiosity ChemMin</div>
+                    </div>
+
+                    <!-- Mineral Card 3: Basalt & Pyroxene -->
+                    <div class="s-card">
+                        <div class="s-stripe stripe-purple"></div>
+                        <div class="s-card-header">
+                            <div class="s-icon s-icon-purple"><i class="fa-solid fa-volcano"></i></div>
+                            <div>
+                                <h3>Volcanic Basalt &amp; Olivine</h3>
+                                <span class="threat moderate">CONSTRUCTION AGGREGATE</span>
+                            </div>
+                        </div>
+                        <p class="s-desc">Primary igneous bedrock covering the volcanic Tharsis and Elysium provinces. Rich in iron, magnesium, and silicon, providing ideal aggregate for sintering 3D-printed landing pads.</p>
+                        <div class="inf-stats">
+                            <div class="inf-row"><span>Key Locations:</span> <span>Syrtis Major, Elysium Planitia</span></div>
+                            <div class="inf-row"><span>ISRU FeO Content:</span> <span>18% &ndash; 22% total abundance</span></div>
+                            <div class="inf-row"><span>Use Case:</span> <span>Geopolymer habitat shielding</span></div>
+                        </div>
+                        <div class="s-src"><i class="fa-solid fa-satellite"></i> Mars Global Surveyor TES Thermal Data</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 5. ENVIRONMENTAL MONITOR ==================== -->
+        <section id="environment" class="app-section">
+            <div class="section-header">
+                <div class="section-label">SURFACE METEOROLOGY &amp; ATMOSPHERIC TELEMETRY</div>
+                <h2>Environmental Monitor &amp; Survival Physics</h2>
+                <p>Surface conditions monitored by rover suites (Perseverance MEDA, Curiosity REMS, and InSight APSS). Thin $CO_2$ atmosphere, ionizing radiation, and diurnal thermal swings demand strict life-support monitoring.</p>
+            </div>
+
+            <!-- Environmental Telemetry Grid -->
+            <div class="dash-layout">
+                <!-- Left Charts Column -->
+                <div class="chart-col">
+                    <div class="chart-card">
+                        <div class="chart-hdr">
+                            <h3><i class="fa-solid fa-temperature-half"></i> Diurnal Surface Temperature Cycle</h3>
+                            <span class="chart-loc">Perseverance MEDA Station &bull; Jezero Crater (Sol Average)</span>
+                        </div>
+                        <div style="height: 260px; position: relative;">
+                            <canvas id="tempChart"></canvas>
+                        </div>
+                        <p class="chart-src-note"><i class="fa-solid fa-circle-info"></i> Extreme delta: Day -15&deg;C (14:00 LMST) plunging to -88&deg;C (05:00 LMST). EVA suits require active liquid heating.</p>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-hdr">
+                            <h3><i class="fa-solid fa-gauge-high"></i> Atmospheric Surface Pressure Variation</h3>
+                            <span class="chart-loc">Curiosity REMS Station &bull; Annual Seasonal Cycle (Pascals)</span>
+                        </div>
+                        <div style="height: 220px; position: relative;">
+                            <canvas id="pressureChart"></canvas>
+                        </div>
+                        <p class="chart-src-note"><i class="fa-solid fa-circle-info"></i> Global cycle: 25% of atmosphere periodically condenses onto polar caps during winter, shifting surface pressure from 690 Pa to 890 Pa.</p>
+                    </div>
+                </div>
+
+                <!-- Right Live Status Column -->
+                <div class="stats-col">
+                    <div class="stat-card">
+                        <h3><i class="fa-solid fa-biohazard"></i> Environmental Hazard Gauges</h3>
+                        <div class="cond-row">
+                            <span class="cond-lbl">Atmospheric Composition:</span>
+                            <span class="cond-val">95.32% CO&sup2;, 2.6% N&sup2;, 1.9% Ar</span>
+                        </div>
+                        <div class="cond-row">
+                            <span class="cond-lbl">Surface Pressure:</span>
+                            <span class="cond-val danger-val">610 Pa (0.006 atm)</span>
+                        </div>
+                        <div class="cond-row">
+                            <span class="cond-lbl">Armstrong Limit:</span>
+                            <span class="cond-val danger-val">Exceeded (Ebullism Danger)</span>
+                        </div>
+                        <div class="cond-row">
+                            <span class="cond-lbl">Unshielded Radiation Dose:</span>
+                            <span class="cond-val danger-val">230 &ndash; 300 mSv / year</span>
+                        </div>
+                        <div class="cond-row">
+                            <span class="cond-lbl">Solar Flare Warning:</span>
+                            <span class="cond-val" style="color: #2ecc71;">NOMINAL &bull; QUIET</span>
+                        </div>
+                        <div class="cond-row highlight-row">
+                            <span class="cond-lbl">Dust Optical Depth (&tau;):</span>
+                            <span class="cond-val" style="color: #f39c12;">0.45 &ndash; Clear Skies</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <h3><i class="fa-solid fa-shield-virus"></i> EVA Suit Life Support Metrics</h3>
+                        <div class="cond-row">
+                            <span class="cond-lbl">Suit Internal Pressure:</span>
+                            <span class="cond-val">29.6 kPa (100% O&sup2;)</span>
+                        </div>
+                        <div class="cond-row">
+                            <span class="cond-lbl">Thermal Loop Power:</span>
+                            <span class="cond-val">420 Watts</span>
+                        </div>
+                        <div class="cond-row">
+                            <span class="cond-lbl">CO&sup2; Scrubbing Mode:</span>
+                            <span class="cond-val">Active Amine Beds</span>
+                        </div>
+                        <div class="cond-row">
+                            <span class="cond-lbl">Dust Barrier Seal:</span>
+                            <span class="cond-val" style="color: #2ecc71;">INTEGRITY 100%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Survival Protocols Grid -->
+            <div class="survival-grid">
+                <!-- Survival Card 1 -->
+                <div class="s-card">
+                    <div class="s-stripe stripe-red"></div>
+                    <div class="s-card-header">
+                        <div class="s-icon s-icon-red"><i class="fa-solid fa-radiation"></i></div>
+                        <div>
+                            <h3>Cosmic &amp; Solar Radiation</h3>
+                            <span class="threat critical">CRITICAL HAZARD</span>
+                        </div>
+                    </div>
+                    <p class="s-desc">Mars lacks a global intrinsic dipole magnetic field and has a thin atmosphere, exposing surface astronauts to Galactic Cosmic Rays (GCR) and Solar Particle Events (SPE).</p>
+                    <div class="s-protocol">
+                        <div class="s-proto-title">SURVIVAL PROTOCOLS:</div>
+                        <div class="s-tip"><i class="fa-solid fa-circle-check"></i> Seek regolith-shielded habitats (&ge;3 meters of packed soil) or natural basalt lava tubes during solar proton storms.</div>
+                        <div class="s-tip"><i class="fa-solid fa-circle-check"></i> Wear active dosimeters; limit lifetime EVA radiation budget to &le;600 mSv.</div>
+                    </div>
+                    <div class="s-src"><i class="fa-solid fa-database"></i> Source: Mars Odyssey MARIE / MSL RAD Telemetry</div>
+                </div>
+
+                <!-- Survival Card 2 -->
+                <div class="s-card">
+                    <div class="s-stripe stripe-orange"></div>
+                    <div class="s-card-header">
+                        <div class="s-icon s-icon-orange"><i class="fa-solid fa-wind"></i></div>
+                        <div>
+                            <h3>Global Dust Storms &amp; Electrostatics</h3>
+                            <span class="threat high">HIGH RISK</span>
+                        </div>
+                    </div>
+                    <p class="s-desc">Dust storms can envelop the entire planet for months, cutting solar irradiance by up to 99% and creating electrostatic charges capable of shorting rover electronics.</p>
+                    <div class="s-protocol">
+                        <div class="s-proto-title">SURVIVAL PROTOCOLS:</div>
+                        <div class="s-tip"><i class="fa-solid fa-circle-check"></i> Monitor optical depth &tau;; abort non-essential EVAs when &tau; exceeds 1.5.</div>
+                        <div class="s-tip"><i class="fa-solid fa-circle-check"></i> Engage automated electrostatic dust-repulsion coatings on solar collectors and habitat airlocks.</div>
+                    </div>
+                    <div class="s-src"><i class="fa-solid fa-database"></i> Source: NASA Mars Climate Database (LMD) / MRO MCS</div>
+                </div>
+
+                <!-- Survival Card 3 -->
+                <div class="s-card">
+                    <div class="s-stripe stripe-grey"></div>
+                    <div class="s-card-header">
+                        <div class="s-icon s-icon-grey"><i class="fa-solid fa-skull"></i></div>
+                        <div>
+                            <h3>Toxic Perchlorates in Regolith</h3>
+                            <span class="threat high">CHEMICAL HAZARD</span>
+                        </div>
+                    </div>
+                    <p class="s-desc">Martian soil contains 0.5% to 1.0% toxic perchlorate salts ($ClO_4^-$), which disrupt human thyroid function and cause lung tissue damage if tracked into habitat living areas.</p>
+                    <div class="s-protocol">
+                        <div class="s-proto-title">SURVIVAL PROTOCOLS:</div>
+                        <div class="s-tip"><i class="fa-solid fa-circle-check"></i> Employ external Suitport airlocks so EVA suits never enter the pressurized living quarters.</div>
+                        <div class="s-tip"><i class="fa-solid fa-circle-check"></i> Deploy catalytic biochemical wash systems to reduce perchlorates to chlorine and breathable oxygen.</div>
+                    </div>
+                    <div class="s-src"><i class="fa-solid fa-database"></i> Source: Phoenix Mars Lander WCL / MSL SAM Instrument</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 6. RESOURCE EXPLORER ==================== -->
+        <section id="resources" class="app-section">
+            <div class="section-header">
+                <div class="section-label">IN-SITU RESOURCE UTILIZATION (ISRU)</div>
+                <h2>Resource Explorer &amp; Water Ice Maps</h2>
+                <p>NASA's Subsurface Water Ice Mapping (SWIM) project and Mars Reconnaissance Orbiter SHARAD radar data pinpoint buried glacial sheets and subterranean shelter caverns required for permanent settlement.</p>
+            </div>
+
+            <div class="resources-grid">
+                <!-- Resource 1: Glacial Subsurface Ice -->
+                <div class="s-card s-card-positive">
+                    <div class="s-stripe stripe-teal"></div>
+                    <div class="s-card-header">
+                        <div class="s-icon s-icon-teal"><i class="fa-solid fa-snowflake"></i></div>
+                        <div>
+                            <h3>Glacial Ice Sheets (Arcadia &amp; Utopia)</h3>
+                            <span class="threat opportunity">VITAL SURVIVAL RESOURCE</span>
+                        </div>
+                    </div>
+                    <p class="s-desc">Massive sheets of up to 95% pure water ice lie buried just 1 to 2.5 meters beneath the dry Martian dust in Arcadia Planitia and Utopia Planitia, mapped by MRO Shallow Radar (SHARAD).</p>
+                    <div class="inf-stats">
+                        <div class="inf-row"><span>Burial Depth:</span> <span>1.0 &ndash; 2.5 meters below dust layer</span></div>
+                        <div class="inf-row"><span>Estimated Volume:</span> <span>&gt;10,000 km&sup3; in northern mid-latitudes</span></div>
+                        <div class="inf-row"><span>Extraction Method:</span> <span>Rodriguez Well (subsurface melt pumping)</span></div>
+                        <div class="inf-row"><span>Output Uses:</span> <span>Drinking water, plant hydroponics, LH2 rocket fuel</span></div>
+                    </div>
+                    <div class="s-src"><i class="fa-solid fa-satellite"></i> NASA Subsurface Water Ice Mapping (SWIM) Project</div>
+                </div>
+
+                <!-- Resource 2: Lava Tube Shelters -->
+                <div class="s-card s-card-positive">
+                    <div class="s-stripe stripe-purple"></div>
+                    <div class="s-card-header">
+                        <div class="s-icon s-icon-purple"><i class="fa-solid fa-archway"></i></div>
+                        <div>
+                            <h3>Lava Tube Skylights &amp; Caves</h3>
+                            <span class="threat opportunity">NATURAL RADIATION BUNKER</span>
+                        </div>
+                    </div>
+                    <p class="s-desc">Volcanic lava tubes in Tharsis and Elysium provide natural ceilings tens of meters thick. These subterranean caverns offer complete shielding against solar particle events, micrometeorites, and surface thermal extremes.</p>
+                    <div class="inf-stats">
+                        <div class="inf-row"><span>Ceiling Thickness:</span> <span>25 &ndash; 45 meters basaltic rock</span></div>
+                        <div class="inf-row"><span>Radiation Reduction:</span> <span>&gt;99.5% cosmic ray blockage</span></div>
+                        <div class="inf-row"><span>Internal Temperature:</span> <span>Stable -40&deg;C (No diurnal spikes)</span></div>
+                        <div class="inf-row"><span>Micrometeorite Defense:</span> <span>Complete ballistic deflection</span></div>
+                    </div>
+                    <div class="s-src"><i class="fa-solid fa-satellite"></i> THEMIS / HiRISE Mars Cave Candidate Catalog</div>
+                </div>
+
+                <!-- Resource 3: Atmospheric ISRU MOXIE -->
+                <div class="s-card s-card-positive">
+                    <div class="s-stripe stripe-blue"></div>
+                    <div class="s-card-header">
+                        <div class="s-icon s-icon-blue"><i class="fa-solid fa-atom"></i></div>
+                        <div>
+                            <h3>Atmospheric MOXIE O&sup2; Generation</h3>
+                            <span class="threat opportunity">IN-SITU PROPELLANT</span>
+                        </div>
+                    </div>
+                    <p class="s-desc">NASA's Mars Oxygen ISRU Experiment (MOXIE) aboard Perseverance demonstrated solid oxide electrolysis, extracting breathable molecular oxygen directly from atmospheric $CO_2$ at 800&deg;C.</p>
+                    <div class="inf-stats">
+                        <div class="inf-row"><span>Proven Yield:</span> <span>12 grams O&sup2; / hour on Mars</span></div>
+                        <div class="inf-row"><span>Reaction:</span> <span>2CO&sup2; &rarr; 2CO + O&sup2;</span></div>
+                        <div class="inf-row"><span>Scaled Human Need:</span> <span>25 &ndash; 30 metric tons for rocket ascent</span></div>
+                    </div>
+                    <div class="s-src"><i class="fa-solid fa-satellite"></i> NASA MOXIE / Perseverance Science Team</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 7. ROUTE PLANNER ==================== -->
+        <section id="route-planner" class="app-section">
+            <div class="section-header">
+                <div class="section-label">OPERATIONAL TRAVERSE NAVIGATION &amp; HAZARD INTELLIGENCE</div>
+                <h2>Marswalk EVA Route Planner &amp; Risk Engine</h2>
+                <p>Plan safe human surface expeditions ("Marswalks") using great-circle geodesics calibrated for Mars' 3,389.5 km mean radius. Evaluate terrain inclines, life-support reserves, and spatial intersections with known hazards.</p>
+            </div>
+
+            <!-- Global Incomplete Hazard Coverage Warning Banner -->
+            <div style="max-width: 1400px; margin: 0 auto 24px auto; padding: 0 40px;">
+                <div class="hazard-coverage-warning">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <div>
+                        <strong>Hazard Coverage &amp; Sensor Resolution Notice:</strong>
+                        Regional hazard models are derived from orbital MGS MOLA (463 m/px) and MRO HiRISE reconnaissance. The absence of marked obstacles along a path does <em>not</em> guarantee absolute smoothness; unmapped sub-meter boulder fields, sand drifts, or micro-crater rims may be present. Forward autonomous scout rover reconnaissance is mandatory before crew EVA deployment.
+                    </div>
+                </div>
+            </div>
+
+            <div class="route-planner-grid">
+                <!-- Planning Parameters & Mode Selection -->
+                <div class="s-card">
+                    <div class="s-stripe stripe-orange"></div>
+                    <div class="s-card-header">
+                        <div class="s-icon s-icon-orange"><i class="fa-solid fa-sliders"></i></div>
+                        <div>
+                            <h3>Traverse Configuration</h3>
+                            <span class="threat moderate">MISSION PARAMETERS</span>
+                        </div>
+                    </div>
+
+                    <!-- Origin & Destination Quick Selection -->
+                    <div class="param-group">
+                        <label class="param-label" for="route-origin-select">Expedition Origin Point:</label>
+                        <select class="param-select" id="route-origin-select">
+                            <option value="jezero-landing" selected>Jezero Base (Octavia E. Butler Landing: 18.44° N, 77.45° E)</option>
+                            <option value="gale-landing">Gale Crater Habitat (Bradbury Landing: -4.59° N, 137.44° E)</option>
+                            <option value="valles-depot">Valles Marineris North Rim Depot (-12.50° N, -60.50° E)</option>
+                            <option value="arcadia-ice-station">Arcadia Planitia Ice Extraction Camp (39.20° N, -171.00° E)</option>
+                        </select>
+                    </div>
+
+                    <div class="param-group">
+                        <label class="param-label" for="eva-mode-select">Traverse Transit Mode:</label>
+                        <select class="param-select" id="eva-mode-select">
+                            <option value="walking">Astronaut EVA Suit Walk (1.2 km/h &bull; Max 10 km limit)</option>
+                            <option value="unpressurized">Unpressurized Rover Buggy (8.0 km/h &bull; Max 35 km range)</option>
+                            <option value="pressurized" selected>Pressurized Habitat Rover (15.0 km/h &bull; Max 200 km range)</option>
+                        </select>
+                    </div>
+
+                    <div class="param-group">
+                        <label class="param-label" for="eva-crew-size">Astronaut Crew Size:</label>
+                        <select class="param-select" id="eva-crew-size">
+                            <option value="2" selected>2 Astronauts (NASA Buddy System Protocol)</option>
+                            <option value="4">4 Astronauts (Full Field Science Team)</option>
+                        </select>
+                    </div>
+
+                    <div class="route-action-buttons">
+                        <button class="cta-primary" id="btn-activate-route-mode" style="width: 100%; justify-content: center; margin-bottom: 10px;">
+                            <i class="fa-solid fa-location-crosshairs"></i> Click Map to Add Waypoints
+                        </button>
+                        <button class="btn-clear" id="btn-clear-route-full" style="width: 100%;">
+                            <i class="fa-solid fa-trash"></i> Reset Route Waypoints
+                        </button>
+                    </div>
+
+                    <!-- Preset Traverses -->
+                    <div style="margin-top: 18px;">
+                        <span class="param-label">Load NASA Traversed Route:</span>
+                        <div class="preset-routes-wrap">
+                            <button class="btn-preset-route" data-route="jezero-delta">Jezero Western Delta Traverse (Perseverance)</button>
+                            <button class="btn-preset-route" data-route="gale-sharp">Gale Crater Mount Sharp Ascent (Curiosity)</button>
+                            <button class="btn-preset-route" data-route="valles-chasma">Valles Marineris Floor Survey</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Route Waypoints Table & Live Calculation -->
+                <div class="s-card">
+                    <div class="s-stripe stripe-teal"></div>
+                    <div class="s-card-header">
+                        <div class="s-icon s-icon-teal"><i class="fa-solid fa-clipboard-list"></i></div>
+                        <div>
+                            <h3>Active Waypoints &amp; Geodesic Telemetry</h3>
+                            <span class="threat opportunity">REAL-TIME TRAVERSE PROFILE</span>
+                        </div>
+                    </div>
+
+                    <div class="route-summary-tiles">
+                        <div class="rst-tile">
+                            <span class="rst-label">TOTAL DISTANCE</span>
+                            <span class="rst-val" id="rst-total-dist">0.0 km</span>
+                        </div>
+                        <div class="rst-tile">
+                            <span class="rst-label">ESTIMATED DURATION</span>
+                            <span class="rst-val" id="rst-est-time">0.0 hrs</span>
+                        </div>
+                        <div class="rst-tile">
+                            <span class="rst-label">O&sup2; CONSUMPTION</span>
+                            <span class="rst-val" id="rst-o2-consumption">0.0 kg</span>
+                        </div>
+                        <div class="rst-tile">
+                            <span class="rst-label">COMPOSITE RISK</span>
+                            <span class="rst-val" id="rst-safety-status" style="color: #2ecc71;">OPTIMAL</span>
+                        </div>
+                    </div>
+
+                    <!-- Waypoint List with Reorder Controls -->
+                    <div class="waypoint-table-wrap">
+                        <table class="wp-table" id="wp-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Waypoint Name</th>
+                                    <th>Coordinates</th>
+                                    <th>Elevation</th>
+                                    <th>Leg Dist</th>
+                                    <th>Order &amp; Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="wp-table-body">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: var(--text-3); padding: 24px;">
+                                        No waypoints added yet. Click on the map or select a preset traverse above.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Elevation Profile Chart Section -->
+                    <div class="elevation-profile-wrap">
+                        <div class="elev-profile-header">
+                            <span class="elev-profile-title"><i class="fa-solid fa-chart-area"></i> Waypoint Elevation Profile (MOLA Altimetry)</span>
+                            <span class="elev-profile-stats">Elevation Gain: <strong id="prof-gain">0 m</strong> &bull; Max Slope: <strong id="prof-max-slope">0.0&deg;</strong></span>
+                        </div>
+                        <div style="height: 150px; position: relative;">
+                            <canvas id="elevProfileChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alternative Routes Comparison Grid -->
+            <div style="max-width: 1400px; margin: 24px auto 0 auto; padding: 0 40px;">
+                <div class="route-compare-wrap">
+                    <div class="route-compare-title">
+                        <i class="fa-solid fa-code-compare"></i>
+                        <span>ALTERNATIVE ROUTE COMPARISON (JEZERO SECTOR DEMONSTRATION)</span>
+                    </div>
+
+                    <div class="route-alt-grid">
+                        <!-- Alternative Route A: Primary Plan -->
+                        <div class="route-alt-card active" id="alt-card-a" onclick="window.MarsNav.selectAlternativeRoute('a')">
+                            <div>
+                                <div class="alt-name">Route A: Primary Scarp Traverse</div>
+                                <div class="alt-tag">Direct traverse along Hawksbill delta scarp</div>
+                            </div>
+                            <div>
+                                <div class="alt-metric"><span>Distance:</span> <span>6.32 km</span></div>
+                                <div class="alt-metric"><span>Travel Time:</span> <span>0.4 hrs (Rover)</span></div>
+                                <div class="alt-metric"><span>Elevation &Delta;h:</span> <span>+85 m</span></div>
+                                <div class="alt-metric"><span>Max Incline:</span> <span>14.5&deg; (Caution)</span></div>
+                                <div class="alt-metric"><span>Risk Category:</span> <span style="color: var(--green);">LOW (18/100)</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Alternative Route B: Low-Risk Safety Detour -->
+                        <div class="route-alt-card" id="alt-card-b" onclick="window.MarsNav.selectAlternativeRoute('b')">
+                            <div>
+                                <div class="alt-name">Route B: Low-Risk Basin Detour</div>
+                                <div class="alt-tag">Follows gentle lacustrine floor; avoids delta breaklines</div>
+                            </div>
+                            <div>
+                                <div class="alt-metric"><span>Distance:</span> <span>7.85 km (+1.53 km)</span></div>
+                                <div class="alt-metric"><span>Travel Time:</span> <span>0.5 hrs</span></div>
+                                <div class="alt-metric"><span>Elevation &Delta;h:</span> <span>+25 m (Gentle)</span></div>
+                                <div class="alt-metric"><span>Max Incline:</span> <span>4.2&deg; (Optimal)</span></div>
+                                <div class="alt-metric"><span>Risk Category:</span> <span style="color: var(--green);">MINIMAL (8/100)</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Alternative Route C: High-Science Ridge Survey -->
+                        <div class="route-alt-card" id="alt-card-c" onclick="window.MarsNav.selectAlternativeRoute('c')">
+                            <div>
+                                <div class="alt-name">Route C: High-Science Ridge Survey</div>
+                                <div class="alt-tag">Maximizes CRISM clay &amp; carbonate outcrop visits</div>
+                            </div>
+                            <div>
+                                <div class="alt-metric"><span>Distance:</span> <span>9.10 km</span></div>
+                                <div class="alt-metric"><span>Travel Time:</span> <span>0.6 hrs</span></div>
+                                <div class="alt-metric"><span>Elevation &Delta;h:</span> <span>+160 m</span></div>
+                                <div class="alt-metric"><span>Max Incline:</span> <span>18.2&deg; (Steep Ridge)</span></div>
+                                <div class="alt-metric"><span>Risk Category:</span> <span style="color: var(--yellow);">MODERATE (42/100)</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transparent Risk Scoring Rules Explanatory Card -->
+                <div class="s-card" style="margin-top: 24px;">
+                    <div class="s-stripe stripe-purple"></div>
+                    <div class="s-card-header">
+                        <div class="s-icon s-icon-purple"><i class="fa-solid fa-calculator"></i></div>
+                        <div>
+                            <h3>Transparent Route Risk Scoring Architecture</h3>
+                            <span class="threat moderate">ALGORITHM EXPLANATION &amp; WEIGHTINGS</span>
+                        </div>
+                    </div>
+                    <p class="s-desc">
+                        MARSNAV calculates a composite risk index from $0$ (optimal) to $100$ (no-go) based on four verifiable physical factors. If authentic data is unavailable for a given sector, the factor is designated as <strong style="color: var(--yellow);">Data Unavailable (Unpenalized)</strong> instead of assigning invented metrics.
+                    </p>
+                    <div class="inf-stats">
+                        <div class="inf-row">
+                            <span>1. Incline Gradient (0 &ndash; 30 pts):</span>
+                            <span>Derived from MOLA elevation delta. Gradients &gt;12&deg; incur steepness penalties; &gt;20&deg; exceeds the angle of repose.</span>
+                        </div>
+                        <div class="inf-row">
+                            <span>2. Known Hazard Intersections (0 &ndash; 40 pts):</span>
+                            <span>Calculated via great-circle polygon containment. Crossing scarps, chasms, or active dust alleys triggers immediate risk escalation.</span>
+                        </div>
+                        <div class="inf-row">
+                            <span>3. Distance &amp; Life Support Margin (0 &ndash; 20 pts):</span>
+                            <span>Based on EVA suit oxygen consumption (0.035 kg/hr/person) and thermal battery power reserves.</span>
+                        </div>
+                        <div class="inf-row">
+                            <span>4. Data Coverage &amp; Uncertainty Buffer (0 &ndash; 10 pts):</span>
+                            <span>Regions lacking sub-meter HiRISE or radar sounding carry an uncertainty penalty reflecting blind-spot risks.</span>
+                        </div>
+                    </div>
+                    <div class="s-src"><i class="fa-solid fa-satellite"></i> Scored against NASA Planetary Geodesy &amp; JPL Rover Mobility Thresholds</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 8. MISSION REPORTS ==================== -->
+        <section id="reports" class="app-section">
+            <div class="section-header">
+                <div class="section-label">NASA SPACE APPS CHALLENGE DOCUMENTATION</div>
+                <h2>Mission Reports &amp; Science Logs</h2>
+                <p>Synthesizing spatial intelligence, scientific findings, and NASA mission data into operational Marswalk logs and hackathon submission deliverables.</p>
+            </div>
+
+            <!-- Mission Timeline -->
+            <div class="timeline-section">
+                <h3 class="timeline-heading">MILESTONES IN MARTIAN SURFACE EXPLORATION</h3>
+                <div class="timeline-grid">
+                    <div class="tm-item">
+                        <div class="tm-year">1976</div>
+                        <div class="tm-name">Viking 1 &amp; 2 Landers</div>
+                        <div class="tm-data">First successful Mars surface operation. Global photographic mosaic establishing baseline geodesy.</div>
+                    </div>
+                    <div class="tm-item">
+                        <div class="tm-year">1997</div>
+                        <div class="tm-name">Mars Pathfinder &amp; Sojourner</div>
+                        <div class="tm-data">First autonomous wheeled rover. Proven mobility in Chryse Planitia rocky terrain.</div>
+                    </div>
+                    <div class="tm-item">
+                        <div class="tm-year">2001</div>
+                        <div class="tm-name">MGS MOLA &amp; Mars Odyssey</div>
+                        <div class="tm-data">High-precision laser altimetry and epithermal neutron detection of widespread polar ice.</div>
+                    </div>
+                    <div class="tm-item">
+                        <div class="tm-year">2006</div>
+                        <div class="tm-name">MRO HiRISE &amp; CRISM</div>
+                        <div class="tm-data">Sub-meter surface imagery and mineral spectroscopy discovering ancient aqueous clay deposits.</div>
+                    </div>
+                    <div class="tm-item">
+                        <div class="tm-year">2012</div>
+                        <div class="tm-name">MSL Curiosity Rover</div>
+                        <div class="tm-data">Gale Crater ancient habitable lakebed confirmation. Continuous REMS environmental monitoring.</div>
+                    </div>
+                    <div class="tm-item tm-active">
+                        <div class="tm-year">2021+</div>
+                        <div class="tm-name">Perseverance &amp; MOXIE</div>
+                        <div class="tm-data">Jezero Crater sample caching, in-situ $O_2$ generation, and preparation for human Marswalk EVAs.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Science Reports Grid -->
+            <div class="reports-grid" style="margin-top: 40px;">
+                <div class="about-card">
+                    <div class="about-icon-wrap"><i class="fa-solid fa-file-shield"></i></div>
+                    <h3>EVA-01: Jezero Delta Reconnaissance</h3>
+                    <p>Traverse along the ancient river delta scarp. Located high-priority mudstone outcrops exhibiting carbonate mineralization with zero steep-slope wheel slippage.</p>
+                    <ul class="about-list" style="margin-top: 14px;">
+                        <li>Distance: 4.8 km traversed</li>
+                        <li>Science Samples: #J01-Clay, #J02-Basalt</li>
+                        <li>Status: Mission Completed Successfully</li>
+                    </ul>
+                </div>
+
+                <div class="about-card">
+                    <div class="about-icon-wrap"><i class="fa-solid fa-ice-cream"></i></div>
+                    <h3>EVA-02: Subsurface Ice Extraction</h3>
+                    <p>Subsurface radar sounding in southern Arcadia Planitia. Verified clean water ice sheet at 1.4 meters depth beneath fine regolith cover.</p>
+                    <ul class="about-list" style="margin-top: 14px;">
+                        <li>Core Depth: 2.2 meters penetrated</li>
+                        <li>Purity: 93.4% crystalline H2O</li>
+                        <li>ISRU Status: Production Ready</li>
+                    </ul>
+                </div>
+
+                <div class="about-card">
+                    <div class="about-icon-wrap"><i class="fa-solid fa-dungeon"></i></div>
+                    <h3>EVA-03: Tharsis Lava Tube Survey</h3>
+                    <p>Explored candidate skylight on the flank of Pavonis Mons. Confirmed subterranean cavern offering &gt;99% cosmic radiation abatement.</p>
+                    <ul class="about-list" style="margin-top: 14px;">
+                        <li>Cavern Width: 65 meters span</li>
+                        <li>Ceiling Thickness: 32 meters basalt</li>
+                        <li>Shelter Rating: Grade A Habitat Site</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 9. DATA SOURCES & PROVENANCE REGISTRY ==================== -->
+        <section id="sources" class="app-section">
+            <div class="section-header">
+                <div class="section-label">GENUINE NASA &amp; USGS DATASET REGISTRY</div>
+                <h2>Data Sources &amp; Scientific Provenance</h2>
+                <p>Every layer, elevation contour, and spectral signature in MARSNAV is grounded in genuine NASA and USGS planetary datasets. Below is the complete provenance registry detailing access methods, classification status, and official documentation.</p>
+            </div>
+
+            <div class="data-sources-grid">
+                <!-- Source 1: USGS Astrogeology WMS -->
+                <div class="source-registry-card">
+                    <div class="src-card-top">
+                        <div class="src-provider-badge"><i class="fa-solid fa-satellite"></i> USGS ASTROGEOLOGY SCIENCE CENTER</div>
+                        <h3 class="src-card-title">Mars Global Web Map Service (WMS)</h3>
+                        <p class="src-card-desc">Direct OGC Web Map Service providing real-time raster tiles for MOLA 463m color topography, blended daytime thermal infrared, and 2001 Mars Odyssey nighttime infrared emissivity.</p>
+                        
+                        <div class="status-pill-wrap">
+                            <span class="data-status-badge real-obs">Real Observations</span>
+                            <span class="data-status-badge orbital">Orbital Remote Sensing</span>
+                        </div>
+
+                        <div class="src-specs-table">
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Service Type:</span>
+                                <span class="src-spec-val">OGC WMS 1.1.1 (CORS Enabled)</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Integrated Layers:</span>
+                                <span class="src-spec-val">MOLA_color, MOLA_THEMIS_blend, THEMIS_night</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Spatial Resolution:</span>
+                                <span class="src-spec-val">463 m / pixel (MOLA Altimeter)</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Attribution &amp; License:</span>
+                                <span class="src-spec-val">USGS Astrogeology / Public Domain (US Gov)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="src-card-bottom">
+                        <span class="src-access-badge verified"><i class="fa-solid fa-circle-check"></i> Live Connected Layer</span>
+                        <a href="https://planetarymaps.usgs.gov/cgi-bin/mapserv?map=/maps/mars/mars_simp_cyl.map&service=WMS&request=GetCapabilities" target="_blank" rel="noopener" class="btn-source-link">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> WMS GetCapabilities
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Source 2: NASA Mars Trek JPL -->
+                <div class="source-registry-card">
+                    <div class="src-card-top">
+                        <div class="src-provider-badge"><i class="fa-solid fa-globe"></i> NASA JET PROPULSION LABORATORY (JPL)</div>
+                        <h3 class="src-card-title">NASA Mars Trek Planetary Tile Service</h3>
+                        <p class="src-card-desc">Interactive multi-resolution planetary tile caches developed by NASA JPL. Provides high-precision Mars Global Surveyor (MGS) laser altimeter shaded relief merged with the global Viking MDIM2.1 mosaic.</p>
+                        
+                        <div class="status-pill-wrap">
+                            <span class="data-status-badge historical">Historical Baseline</span>
+                            <span class="data-status-badge real-obs">Calibrated Altimetry</span>
+                        </div>
+
+                        <div class="src-specs-table">
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Access Method:</span>
+                                <span class="src-spec-val">RESTful WMTS/TMS Tile Cache</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Coordinate System:</span>
+                                <span class="src-spec-val">Mars Equirectangular (EQ)</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Dataset ID:</span>
+                                <span class="src-spec-val">Mars_MGS_MOLA_ClrShade_merge_463m</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">License:</span>
+                                <span class="src-spec-val">NASA Open Data Guidelines</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="src-card-bottom">
+                        <span class="src-access-badge verified"><i class="fa-solid fa-circle-check"></i> Live Connected Layer</span>
+                        <a href="https://trek.nasa.gov/mars/" target="_blank" rel="noopener" class="btn-source-link">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Portal Link
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Source 3: OpenPlanetary Basemap -->
+                <div class="source-registry-card">
+                    <div class="src-card-top">
+                        <div class="src-provider-badge"><i class="fa-solid fa-map"></i> OPENPLANETARY / CARTO / USGS</div>
+                        <h3 class="src-card-title">OpenPlanetary Mars Global Basemap</h3>
+                        <p class="src-card-desc">Planetary mapping standard project blending USGS Viking MDIM 2.1 color mosaic with MGS MOLA elevation relief, reprojected into Web Mercator slippy-map tiles for Leaflet geospatial engines.</p>
+                        
+                        <div class="status-pill-wrap">
+                            <span class="data-status-badge orbital">Orbital Composite</span>
+                            <span class="data-status-badge real-obs">Real Observations</span>
+                        </div>
+
+                        <div class="src-specs-table">
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Tile Architecture:</span>
+                                <span class="src-spec-val">XYZ PNG Tiles (Fastly Global CDN)</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Base Resolution:</span>
+                                <span class="src-spec-val">Zoom Levels 0 &ndash; 9 Global</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Underlying Data:</span>
+                                <span class="src-spec-val">USGS MDIM 2.1 / MGS MOLA MEGDR</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Attribution:</span>
+                                <span class="src-spec-val">&copy; NASA / USGS / JPL / OpenPlanetary</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="src-card-bottom">
+                        <span class="src-access-badge verified"><i class="fa-solid fa-circle-check"></i> Default Active Basemap</span>
+                        <a href="https://www.openplanetary.org/opm" target="_blank" rel="noopener" class="btn-source-link">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> OpenPlanetary Docs
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Source 4: MRO HiRISE -->
+                <div class="source-registry-card">
+                    <div class="src-card-top">
+                        <div class="src-provider-badge"><i class="fa-solid fa-camera"></i> NASA / UNIVERSITY OF ARIZONA (LPL)</div>
+                        <h3 class="src-card-title">MRO HiRISE Sub-Meter Camera Observations</h3>
+                        <p class="src-card-desc">The High Resolution Imaging Science Experiment aboard the Mars Reconnaissance Orbiter. Produces sub-meter imagery (25 to 32 cm/pixel) resolving surface boulders, rover tracks, and hazardous delta scarps.</p>
+                        
+                        <div class="status-pill-wrap">
+                            <span class="data-status-badge real-obs">Real Observations</span>
+                            <span class="data-status-badge orbital">Sub-meter Resolution</span>
+                        </div>
+
+                        <div class="src-specs-table">
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Integrated Targets:</span>
+                                <span class="src-spec-val">ESP_068294_1985 (Jezero), ESP_028335_1755 (Gale)</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Ground Sampling:</span>
+                                <span class="src-spec-val">25.1 &ndash; 31.5 cm / pixel</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Data Archive:</span>
+                                <span class="src-spec-val">NASA Planetary Data System (PDS) RDR</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Attribution:</span>
+                                <span class="src-spec-val">NASA / JPL-Caltech / Univ. of Arizona</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="src-card-bottom">
+                        <span class="src-access-badge verified"><i class="fa-solid fa-circle-check"></i> Integrated Footprint Layer</span>
+                        <a href="https://www.uahirise.org/" target="_blank" rel="noopener" class="btn-source-link">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> HiRISE Operations
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Source 5: USGS Nomenclature -->
+                <div class="source-registry-card">
+                    <div class="src-card-top">
+                        <div class="src-provider-badge"><i class="fa-solid fa-font"></i> IAU &amp; USGS ASTROGEOLOGY</div>
+                        <h3 class="src-card-title">Gazetteer of Planetary Nomenclature (Mars)</h3>
+                        <p class="src-card-desc">Official spatial catalog maintained by the International Astronomical Union (IAU) Working Group for Planetary System Nomenclature. Contains authoritative coordinates, diameters, and origins for named features.</p>
+                        
+                        <div class="status-pill-wrap">
+                            <span class="data-status-badge real-obs">Official Standards</span>
+                            <span class="data-status-badge historical">IAU Geodesy</span>
+                        </div>
+
+                        <div class="src-specs-table">
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Feature Classes:</span>
+                                <span class="src-spec-val">Crater, Chasma, Mons, Planitia, Vallis</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Integrated Items:</span>
+                                <span class="src-spec-val">12 Major Morphological Planetary Features</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Spatial Format:</span>
+                                <span class="src-spec-val">GeoJSON Geo-Vectors</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Publisher:</span>
+                                <span class="src-spec-val">USGS Astrogeology / NASA Planetary Geology</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="src-card-bottom">
+                        <span class="src-access-badge verified"><i class="fa-solid fa-circle-check"></i> Integrated Vector Layer</span>
+                        <a href="https://planetarynames.wr.usgs.gov/" target="_blank" rel="noopener" class="btn-source-link">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> IAU Gazetteer
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Source 6: MRO CRISM -->
+                <div class="source-registry-card">
+                    <div class="src-card-top">
+                        <div class="src-provider-badge"><i class="fa-solid fa-flask"></i> NASA PDS GEOSCIENCES / JHUAPL</div>
+                        <h3 class="src-card-title">MRO CRISM Imaging Spectrometer</h3>
+                        <p class="src-card-desc">Compact Reconnaissance Imaging Spectrometer for Mars. Analyzed surface spectral reflectance (0.36 to 3.92 &mu;m) identifying aqueous phyllosilicates (clays), hydrated sulfates, carbonates, and olivine bedrock.</p>
+                        
+                        <div class="status-pill-wrap">
+                            <span class="data-status-badge real-obs">Real Observations</span>
+                            <span class="data-status-badge orbital">Spectral Spectroscopy</span>
+                        </div>
+
+                        <div class="src-specs-table">
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Spectral Range:</span>
+                                <span class="src-spec-val">544 Channels (0.36 &ndash; 3.92 &mu;m)</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Target ID Provenance:</span>
+                                <span class="src-spec-val">FRT00003E12, HRL000040FF, FRS0002EB14</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Target Minerals:</span>
+                                <span class="src-spec-val">Smectite Clays, Carbonates, Gypsum, Olivine</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Attribution:</span>
+                                <span class="src-spec-val">NASA / JHUAPL / CRISM Science Team</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="src-card-bottom">
+                        <span class="src-access-badge verified"><i class="fa-solid fa-circle-check"></i> Integrated Spectral Layer</span>
+                        <a href="https://crism.jhuapl.edu/" target="_blank" rel="noopener" class="btn-source-link">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> CRISM Archive
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Source 7: NASA SWIM / SHARAD -->
+                <div class="source-registry-card">
+                    <div class="src-card-top">
+                        <div class="src-provider-badge"><i class="fa-solid fa-snowflake"></i> PLANETARY SCIENCE INSTITUTE / NASA</div>
+                        <h3 class="src-card-title">Subsurface Water Ice Mapping (SWIM)</h3>
+                        <p class="src-card-desc">Integrates MRO Shallow Radar (SHARAD 15-25 MHz) dielectric sounding, neutron spectroscopy, and thermal inertia to detect buried glacial ice sheets accessible within 1 to 2.5 meters of the Martian surface.</p>
+                        
+                        <div class="status-pill-wrap">
+                            <span class="data-status-badge inferred">Inferred / Modelled Data</span>
+                            <span class="data-status-badge real-obs">Radar Ground-Truth</span>
+                        </div>
+
+                        <div class="src-specs-table">
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Primary Instrument:</span>
+                                <span class="src-spec-val">MRO SHARAD Radar Sounder (15-25 MHz)</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Ice Purity Index:</span>
+                                <span class="src-spec-val">&gt;0.85 Consistency Index (&gt;90% pure)</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Target Sectors:</span>
+                                <span class="src-spec-val">Arcadia Planitia &amp; Utopia Basin Floor</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Attribution:</span>
+                                <span class="src-spec-val">Planetary Science Institute / NASA JPL</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="src-card-bottom">
+                        <span class="src-access-badge verified"><i class="fa-solid fa-circle-check"></i> Integrated Resource Layer</span>
+                        <a href="https://swim.psi.edu/" target="_blank" rel="noopener" class="btn-source-link">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> SWIM Project
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Source 8: Rover Weather Suites -->
+                <div class="source-registry-card">
+                    <div class="src-card-top">
+                        <div class="src-provider-badge"><i class="fa-solid fa-temperature-half"></i> NASA MARS 2020 &amp; MSL SCIENCE TEAMS</div>
+                        <h3 class="src-card-title">MEDA &amp; REMS Surface Weather Suites</h3>
+                        <p class="src-card-desc">In-situ surface meteorological measurements from Perseverance’s Mars Environmental Dynamics Analyzer (MEDA) in Jezero Crater and Curiosity’s Rover Environmental Monitoring Station (REMS) in Gale Crater.</p>
+                        
+                        <div class="status-pill-wrap">
+                            <span class="data-status-badge real-obs">In-Situ Real Observations</span>
+                            <span class="data-status-badge real-obs">Ground Telemetry</span>
+                        </div>
+
+                        <div class="src-specs-table">
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Telemetry Types:</span>
+                                <span class="src-spec-val">Air &amp; Ground Temp, Pressure, Optical Depth &tau;</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Sampling Frequency:</span>
+                                <span class="src-spec-val">Continuous Diurnal Martian LMST Cycle</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Data Archive:</span>
+                                <span class="src-spec-val">NASA PDS Atmospheres Node (NMSU)</span>
+                            </div>
+                            <div class="src-spec-row">
+                                <span class="src-spec-label">Attribution:</span>
+                                <span class="src-spec-val">NASA / JPL / Centro de Astrobiolog&iacute;a (CAB)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="src-card-bottom">
+                        <span class="src-access-badge verified"><i class="fa-solid fa-circle-check"></i> Integrated Telemetry Charts</span>
+                        <a href="https://mars.nasa.gov/mars2020/mission/instruments/meda/" target="_blank" rel="noopener" class="btn-source-link">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> MEDA Science Specs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer id="footer">
+        <div class="footer-inner">
+            <div class="ft-brand">
+                <div class="ft-logo">
+                    <i class="fa-solid fa-satellite-dish" style="color: var(--mars-primary); font-size: 22px;"></i>
+                    <span>MARS<span style="color: var(--mars-primary);">NAV</span></span>
+                </div>
+                <p>NASA Space Apps Challenge 2026 Submission</p>
+                <p class="ft-sub">Topic: Interplanetary Survival Guide: Martian Map</p>
+            </div>
+
+            <div class="ft-links">
+                <h4>NAVIGATION</h4>
+                <a href="#dashboard">Mission Dashboard</a>
+                <a href="#map-section">Martian Map</a>
+                <a href="#terrain">Terrain Analysis</a>
+                <a href="#geology">Geology Explorer</a>
+                <a href="#environment">Environmental Monitor</a>
+                <a href="#resources">Resource Explorer</a>
+                <a href="#route-planner">Route Planner</a>
+            </div>
+
+            <div class="ft-links">
+                <h4>NASA DATA SOURCES</h4>
+                <a href="https://trek.nasa.gov/mars/" target="_blank" rel="noopener">NASA Mars Trek (JPL)</a>
+                <a href="https://astrogeology.usgs.gov/" target="_blank" rel="noopener">USGS Astrogeology Science</a>
+                <a href="https://pds.nasa.gov/" target="_blank" rel="noopener">NASA Planetary Data System</a>
+                <a href="https://www.uahirise.org/" target="_blank" rel="noopener">MRO HiRISE Imagery</a>
+                <a href="https://data.nasa.gov/" target="_blank" rel="noopener">NASA Open Data Portal</a>
+            </div>
+
+            <div class="ft-disc">
+                <h4>MISSION STATEMENT</h4>
+                <p>Equipping the first generation of Martian surface astronauts with multi-mission spatial intelligence, real-time science telemetry, and autonomous route safety analysis.</p>
+            </div>
+        </div>
+
+        <div class="ft-bottom">
+            &copy; 2026 MARSNAV Team &bull; NASA Space Apps Challenge 2026 &bull; Developed for Human Planetary Exploration.
+        </div>
+    </footer>
+
+    <!-- Leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Core Application Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
